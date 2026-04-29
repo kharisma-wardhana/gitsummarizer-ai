@@ -35,5 +35,5 @@ To install GitSummarizer AI, follow these steps:
 4. Run the application:
 
     ```bash
-    python app.py
+    python -m gitsummarizer
     ```
