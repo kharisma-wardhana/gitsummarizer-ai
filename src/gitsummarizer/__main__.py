@@ -16,6 +16,7 @@ async def _main() -> None:
     bot = Bot(token=s.telegram_bot_token)
     dp = Dispatcher()
     dp.include_router(router)
+    await bot.delete_webhook(drop_pending_updates=True)
     logging.getLogger(__name__).info("Bot started, polling…")
     await dp.start_polling(bot)
 

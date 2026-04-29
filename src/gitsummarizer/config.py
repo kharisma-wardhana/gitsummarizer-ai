@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     gitlab_url: str = Field(default="https://gitlab.com", alias="GITLAB_URL")
     gitlab_token: str = Field(alias="GITLAB_TOKEN")
     gitlab_default_project: Optional[str] = Field(default=None, alias="GITLAB_DEFAULT_PROJECT")
+    gitlab_username: Optional[str] = Field(default=None, alias="GITLAB_USERNAME")
     openai_api_key: str = Field(alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
     output_dir: Path = Field(default=Path("./output"), alias="OUTPUT_DIR")
