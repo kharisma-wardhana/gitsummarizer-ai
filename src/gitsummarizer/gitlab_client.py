@@ -20,6 +20,11 @@ class CommitData:
     committed_at: datetime
     changed_files: list[str] = field(default_factory=list)
     project: Optional[str] = None
+    additions: int = 0
+    deletions: int = 0
+    total_changes: int = 0
+    parent_ids: list[str] = field(default_factory=list)
+    web_url: Optional[str] = None
 
     def to_prompt_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {
@@ -29,9 +34,15 @@ class CommitData:
             "date": self.committed_at.date().isoformat(),
             "changed_files": self.changed_files,
             "files_changed_count": len(self.changed_files),
+            "additions": self.additions,
+            "deletions": self.deletions,
+            "loc_churn": self.total_changes,
+            "is_merge": len(self.parent_ids) > 1,
         }
         if self.project:
             d["project"] = self.project
+        if self.web_url:
+            d["web_url"] = self.web_url
         return d
 
 
@@ -39,6 +50,9 @@ def _commit_to_data(c: Any, project_path: Optional[str] = None) -> CommitData:
     diffs = c.diff(get_all=True)
     files = [d.get("new_path") or d.get("old_path") for d in diffs]
     files = [f for f in files if f]
+    stats = getattr(c, "stats", {}) or {}
+    parent_ids = list(getattr(c, "parent_ids", []) or [])
+    web_url = getattr(c, "web_url", None)
     return CommitData(
         sha=c.id,
         message=c.message,
@@ -46,6 +60,11 @@ def _commit_to_data(c: Any, project_path: Optional[str] = None) -> CommitData:
         committed_at=datetime.fromisoformat(c.committed_date.replace("Z", "+00:00")),
         changed_files=files,
         project=project_path,
+        additions=int(stats.get("additions", 0) or 0),
+        deletions=int(stats.get("deletions", 0) or 0),
+        total_changes=int(stats.get("total", 0) or 0),
+        parent_ids=parent_ids,
+        web_url=web_url,
     )
 
 
@@ -60,7 +79,7 @@ def fetch_commits(project_id_or_path: str, since: datetime) -> list[CommitData]:
     gl = gitlab.Gitlab(s.gitlab_url, private_token=s.gitlab_token)
     project = gl.projects.get(project_id_or_path)
 
-    raw_commits = project.commits.list(since=since.isoformat(), all=True)
+    raw_commits = project.commits.list(since=since.isoformat(), all=True, with_stats=True)
 
     out = [_commit_to_data(c, project_path=project.path_with_namespace) for c in raw_commits]
     out.sort(key=lambda c: c.committed_at, reverse=True)
@@ -98,6 +117,7 @@ def fetch_user_commits(username: str, since: datetime) -> list[CommitData]:
                 since=since.isoformat(),
                 author=username,
                 all=True,
+                with_stats=True,
             )
         except GitlabError as e:
             logger.warning("Skipping project %s: %s", p.path_with_namespace, e)

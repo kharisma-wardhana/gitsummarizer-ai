@@ -1,6 +1,7 @@
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 
+from gitsummarizer.gitlab_client import CommitData
 from gitsummarizer.markdown_writer import (
     filename_for,
     render_markdown,
@@ -88,3 +89,58 @@ def test_write_roadmap_creates_file(tmp_path: Path):
     assert path.name == "engineer_roadmap_08042026_group_my-project.md"
     content = path.read_text(encoding="utf-8")
     assert "Auth Refactor" in content
+
+
+def _sample_commits() -> list[CommitData]:
+    return [
+        CommitData(
+            sha="abc12345abcdef",
+            message="Switch JWT verification to OAuth2 introspection\n\nLong body",
+            author="Alice",
+            committed_at=datetime(2026, 4, 5, 10, 0, tzinfo=timezone.utc),
+            web_url="https://gitlab.example.com/group/my-project/-/commit/abc12345",
+        ),
+        CommitData(
+            sha="def67890abcdef",
+            message="Drop legacy session cookie path",
+            author="Bob",
+            committed_at=datetime(2026, 4, 4, 9, 0, tzinfo=timezone.utc),
+            web_url="https://gitlab.example.com/group/my-project/-/commit/def67890",
+        ),
+    ]
+
+
+def _roadmap_with_commit_shas(shas: list[str]) -> Roadmap:
+    rm = _sample_roadmap()
+    rm.initiatives[0].commit_shas = shas
+    return rm
+
+
+def test_render_includes_commit_log_when_commits_provided():
+    rm = _roadmap_with_commit_shas(["abc12345", "def67890"])
+    md = render_markdown(rm, commits=_sample_commits())
+    assert "## Commit Log" in md
+    assert "### Auth Refactor" in md
+    assert "`abc12345` — Switch JWT verification to OAuth2 introspection" in md
+    assert "*(Alice, 05/04/2026)*" in md
+    assert "[link](https://gitlab.example.com/group/my-project/-/commit/abc12345)" in md
+    # newest-first ordering inside the section
+    assert md.index("`abc12345`") < md.index("`def67890`")
+
+
+def test_render_omits_commit_log_when_no_commits_passed():
+    rm = _roadmap_with_commit_shas(["abc12345"])
+    md = render_markdown(rm)
+    assert "## Commit Log" not in md
+
+
+def test_render_omits_commit_log_when_no_initiative_has_shas():
+    md = render_markdown(_sample_roadmap(), commits=_sample_commits())
+    assert "## Commit Log" not in md
+
+
+def test_render_skips_unresolved_shas():
+    rm = _roadmap_with_commit_shas(["zzzzzzzz"])
+    md = render_markdown(rm, commits=_sample_commits())
+    assert "## Commit Log" not in md
+    assert "zzzzzzzz" not in md

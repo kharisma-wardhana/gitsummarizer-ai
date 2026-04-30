@@ -53,6 +53,10 @@ class Initiative(BaseModel):
     finish_date: date = Field(description="Date of the latest commit in this initiative group.")
     output: str = Field(description="Tangible result (e.g. 'New API endpoint').")
     difficulty: Difficulty
+    commit_shas: list[str] = Field(
+        default_factory=list,
+        description="Short 8-char SHAs of source commits grouped into this initiative.",
+    )
 
 
 class Roadmap(BaseModel):

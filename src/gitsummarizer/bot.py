@@ -105,5 +105,5 @@ async def report_handler(message: Message) -> None:
         await message.reply(f"Summarization failed: {e}")
         return
 
-    md_path = write_roadmap(roadmap, s.output_dir)
+    md_path = write_roadmap(roadmap, s.output_dir, commits=commits)
     await message.reply_document(FSInputFile(md_path))

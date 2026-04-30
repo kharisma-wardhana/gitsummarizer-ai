@@ -1,0 +1,12 @@
+services:
+  bot:
+    build: .
+    image: gitsummarizer-ai:latest
+    container_name: gitsummarizer-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      OUTPUT_DIR: /app/output
+    volumes:
+      - ./output:/app/output
