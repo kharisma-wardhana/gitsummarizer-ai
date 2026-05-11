@@ -16,11 +16,13 @@ from gitsummarizer.schema import (
 def _initiative(**overrides):
     base = dict(
         initiative="Auth Refactor",
+        repositories=["group/project"],
         description="Migrated JWT logic to OAuth2",
         category=Category.SECURITY,
         weight=5,
         status=Status.CLOSED,
         priority=Priority.HIGH,
+        start_date=date(2026, 4, 1),
         finish_date=date(2026, 4, 5),
         output="Enhanced Security",
         difficulty=Difficulty.HARD,
@@ -32,6 +34,7 @@ def _initiative(**overrides):
 def test_roadmap_round_trips_through_json():
     rm = Roadmap(
         repository="group/project",
+        repositories=["group/project"],
         period_start=date(2026, 4, 1),
         period_end=date(2026, 4, 8),
         initiatives=[_initiative()],
@@ -65,3 +68,43 @@ def test_enum_values_are_display_strings():
     assert Status.IN_PROGRESS.value == "In Progress"
     assert Category.SYSTEM_PERFORMANCE.value == "System Performance"
     assert Priority.HIGH.value == "High"
+
+
+def test_start_date_defaults_to_finish_date_when_omitted():
+    it = Initiative(
+        initiative="x",
+        description="y",
+        category=Category.OTHERS,
+        weight=1,
+        status=Status.CLOSED,
+        priority=Priority.LOW,
+        finish_date=date(2026, 4, 5),
+        output="z",
+        difficulty=Difficulty.EASY,
+    )
+    assert it.start_date == date(2026, 4, 5)
+
+
+def test_initiative_repositories_defaults_to_empty_list():
+    it = Initiative(
+        initiative="x",
+        description="y",
+        category=Category.OTHERS,
+        weight=1,
+        status=Status.CLOSED,
+        priority=Priority.LOW,
+        finish_date=date(2026, 4, 5),
+        output="z",
+        difficulty=Difficulty.EASY,
+    )
+    assert it.repositories == []
+
+
+def test_roadmap_repositories_defaults_to_empty_list():
+    rm = Roadmap(
+        repository="group/project",
+        period_start=date(2026, 4, 1),
+        period_end=date(2026, 4, 8),
+        initiatives=[],
+    )
+    assert rm.repositories == []

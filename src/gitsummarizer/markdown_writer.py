@@ -5,11 +5,11 @@ from .schema import Roadmap
 
 
 _TABLE_HEADER = (
-    "| Initiative | Description | Category | Weight | Status | Priority | "
-    "Finish Date | Output | Difficulty |"
+    "| Initiative | Repositories | Description | Category | Weight | Status | "
+    "Priority | Start Date | Finish Date | Output | Difficulty |"
 )
 _TABLE_SEP = (
-    "| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |"
+    "| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |"
 )
 
 
@@ -33,21 +33,29 @@ def render_markdown(roadmap: Roadmap) -> str:
         f"# Engineering Roadmap: {roadmap.repository}",
         f"**Period:** {roadmap.period_start.strftime('%d/%m/%Y')} - "
         f"{roadmap.period_end.strftime('%d/%m/%Y')}",
-        "",
-        _TABLE_HEADER,
-        _TABLE_SEP,
     ]
+    if len(roadmap.repositories) > 1:
+        lines.append(f"**Repositories:** {', '.join(roadmap.repositories)}")
+    lines.extend(
+        [
+            "",
+            _TABLE_HEADER,
+            _TABLE_SEP,
+        ]
+    )
     for it in roadmap.initiatives:
         lines.append(
             "| "
             + " | ".join(
                 [
                     f"**{_escape_cell(it.initiative)}**",
+                    _escape_cell(", ".join(it.repositories)),
                     _escape_cell(it.description),
                     it.category.value,
                     str(it.weight),
                     it.status.value,
                     it.priority.value,
+                    it.start_date.strftime("%d/%m/%Y"),
                     it.finish_date.strftime("%d/%m/%Y"),
                     _escape_cell(it.output),
                     it.difficulty.value,

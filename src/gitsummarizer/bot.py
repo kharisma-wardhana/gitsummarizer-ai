@@ -105,5 +105,7 @@ async def report_handler(message: Message) -> None:
         await message.reply(f"Summarization failed: {e}")
         return
 
+    roadmap.repositories = sorted({c.project for c in commits if c.project})
+
     md_path = write_roadmap(roadmap, s.output_dir)
     await message.reply_document(FSInputFile(md_path))

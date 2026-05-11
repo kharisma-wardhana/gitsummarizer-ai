@@ -21,7 +21,14 @@ Rules:
    commit unless the commit truly stands alone.
 2. For each Initiative:
    - "initiative": short business-facing title (the WHY).
-   - "description": one or two sentences of technical summary (the WHAT/HOW).
+   - "repositories": list of distinct project paths drawn from the "project"
+     field of the commits you grouped into this initiative. Use an empty list
+     when commits have no project field. Do not invent project names.
+   - "description": 3-5 sentences covering (a) WHAT changed (the user-visible
+     or technical effect), (b) HOW it was implemented (key files, modules, or
+     patterns touched), (c) the technical IMPACT (performance, security,
+     refactor scope, reliability, etc.). For trivial initiatives (typo fix,
+     dependency bump, lint cleanup) 1-2 sentences is acceptable — do not pad.
    - "category": pick the single best fit from the allowed list.
    - "weight": Fibonacci 1, 2, 3, 5, or 8. Use changed-file count and breadth as
      the primary signal: trivial single-file = 1, focused multi-file = 3,
@@ -30,6 +37,7 @@ Rules:
      Use "In Progress" only if commit messages indicate WIP / partial work.
    - "priority": infer from message language ("hotfix", "urgent" → High;
      "polish", "cleanup" → Low; default Medium).
+   - "start_date": the date of the EARLIEST commit in the group, ISO format.
    - "finish_date": the date of the LATEST commit in the group, ISO format.
    - "output": short tangible artifact, e.g. "New /users API endpoint",
      "Reduced p95 latency", "Migrated to OAuth2".
